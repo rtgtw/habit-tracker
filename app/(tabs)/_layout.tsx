@@ -6,7 +6,10 @@ import AntDesign from '@expo/vector-icons/AntDesign';
 import Entypo from '@expo/vector-icons/Entypo';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 
+
 //Tab represents the tabs at the bottom of the screen to click through 
+
+
 
 
 
@@ -17,11 +20,26 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 //Almost the equiv to creating your own component but just doing it on the fly
 
 export default function TabsLayout() {
+
+  //   const router = useRouter();
+  //   const isAuth = false;
+
+  // useEffect( () => {
+  //   if(!isAuth){
+  //     router.replace("/auth");
+  //   }
+
+  //   console.log(`Entered: ${isAuth}`)
+
+  // }, [isAuth]);
+    
+
   return ( <>
     
     <Tabs screenOptions={{tabBarActiveTintColor: "red"}}>
       <Tabs.Screen name="index" options={{title:"Home", tabBarIcon:({color,size, focused}) => {return focused ? <AntDesign name="home" size={24} color="black" /> :  <FontAwesome name="home" size={size} color={color} />} }}/>
       <Tabs.Screen name="login" options={{title:"Login", tabBarIcon:() => (<Entypo name="login" size={24} color="black" />)}}/>
+      <Tabs.Screen name="auth"/>
     </Tabs>
    </>)
-   }
+   };
