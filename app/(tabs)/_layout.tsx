@@ -39,7 +39,7 @@ export default function TabsLayout() {
     <Tabs screenOptions={{tabBarActiveTintColor: "red"}}>
       <Tabs.Screen name="index" options={{title:"Home", tabBarIcon:({color,size, focused}) => {return focused ? <AntDesign name="home" size={24} color="black" /> :  <FontAwesome name="home" size={size} color={color} />} }}/>
       <Tabs.Screen name="login" options={{title:"Login", tabBarIcon:() => (<Entypo name="login" size={24} color="black" />)}}/>
-      <Tabs.Screen name="auth"/>
+      {/* <Tabs.Screen name="auth"/> */}
     </Tabs>
    </>)
    };

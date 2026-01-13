@@ -2,7 +2,7 @@ import { useRouter } from "expo-router";
 import { useState } from "react";
 import { KeyboardAvoidingView, Platform, StyleSheet, View } from "react-native";
 import { Button, Text, TextInput, useTheme } from 'react-native-paper';
-import { useAuth } from "../../lib/auth-context";
+import { useAuth } from "./../lib/auth-context";
 
 export default function AuthScreen(){
 
@@ -12,6 +12,8 @@ export default function AuthScreen(){
     const [pass, setPass] = useState<string>("");
     const [error, setError] = useState<string | null>("");
     const theme = useTheme();
+
+    //UseRouter allows you to navigate to different pages (files) since expo is file-based routing
     const router = useRouter();
 
     const {signIn, signUp} = useAuth();
@@ -61,7 +63,7 @@ export default function AuthScreen(){
             setError(error);
             return
            }
-        }else{
+        }else {
            const error = await signIn(email,pass);
 
             if(error){
@@ -71,6 +73,8 @@ export default function AuthScreen(){
 
            //if successful redirect the user to the home page
            router.replace("/");
+
+         
             
         }
 
@@ -103,7 +107,7 @@ export default function AuthScreen(){
             <TextInput label="email" 
             autoCapitalize="none"
              keyboardType="email-address"
-             placeholder="renata@gmail.com"
+             placeholder="email@gmail.com"
              mode="outlined"
              style={styles.input}
              value={email}
