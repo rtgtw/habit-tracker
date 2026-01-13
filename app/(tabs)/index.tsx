@@ -10,7 +10,7 @@ export default function Index() {
     <View
       style={styles.view}
     >
-      <Text>Edit app/index.tsx to edit this .</Text>
+      <Text>.</Text>
       <Button mode="text" onPress={signOut} icon="logout">Sign Out</Button>
     </View>
   );

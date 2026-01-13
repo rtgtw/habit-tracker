@@ -1,5 +1,7 @@
 import { Stack, useRouter, useSegments } from "expo-router";
 import { useEffect } from "react";
+import { PaperProvider } from "react-native-paper";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import { AuthProvider, useAuth } from "../lib/auth-context";
 //Stack represents which ever screen that you are in
 
@@ -14,6 +16,7 @@ function RouteGuard({children}: {children: React.ReactNode}){
   //Becuase we dont want to redirect to auth if they are already there
   const segments = useSegments();
 
+   
   //We want to check if the user is authenticated using appwrite
   //useAuth is a helper hook we creaetd in auth-context that calls useContext for us,
   //And this file has access to it 
@@ -27,10 +30,15 @@ function RouteGuard({children}: {children: React.ReactNode}){
 
   //We want to redirect the user to the auth page if user == null
   useEffect( () => {
-    console.log("Insided RouteGurd");
+    console.log("Inside RouteGurd");
     //this lets us know if the user is already inside of the auth page
+   
+     for(const element of segments){
+      console.log(`Element: ${element}`);
+    }
+  
     const inAuthGroup:boolean = segments[0] === "auth";
-    console.log(`User: ${user}`);
+   console.log(`InAuthGroup: ${inAuthGroup}`);
 
 
     //If the user is not authenticated, and not inside the auth screen, redirect to auth
@@ -55,14 +63,20 @@ function RouteGuard({children}: {children: React.ReactNode}){
 
 
 
+//Safe area provider makes the app compatible with different screens
+
 export default function RootLayout() {
   return (<>
     <AuthProvider>
+      <PaperProvider>
+      <SafeAreaProvider>
       <RouteGuard>
         <Stack>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         </Stack>
       </RouteGuard>
+      </SafeAreaProvider>
+      </PaperProvider>
     </AuthProvider>
 
 
