@@ -112,6 +112,16 @@ export default function AuthScreen(){
              style={styles.input}
              value={email}
              onChangeText={handleEmail}
+                    theme={{
+                        colors: {
+                            background: '#f5f5f5',
+                            surface: 'white',         // Paper surface color
+                            // primary: '#000000',       // focused outline + label
+                            // onSurfaceVariant: '#000000', // unfocused label
+                            // placeholder: '#000000',   // placeholder text
+                        }
+                    }}
+            textColor="black"
              />
 
               <TextInput label="password" 
@@ -122,6 +132,15 @@ export default function AuthScreen(){
              value={pass}
              onChangeText={handlePass}
              secureTextEntry
+               theme={{
+                        colors: {
+                            background: '#f5f5f5',
+                            surface: 'white',         // Paper surface color
+                            // primary: '#000000',       // focused outline + label
+                            // onSurfaceVariant: '#000000', // unfocused label
+                        }
+                    }}
+            textColor="black"
              />
 
             {error && (<Text style={{color:theme.colors.error}}>{error}</Text>)}
@@ -148,11 +167,12 @@ const styles = StyleSheet.create({
     },
     title:{
         textAlign:"center",
-        marginBottom:15
+        marginBottom:15,
+        color:'black'
     },
     input:{
         marginBottom:15,
-        backgroundColor:"#ffffff"
+        // backgroundColor:"#ffffff"
     },
     button:{
         marginTop:8
