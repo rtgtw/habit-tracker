@@ -1,7 +1,7 @@
 import { DATABASE_ID, databases, HABITS_TABLE_ID } from "@/lib/appwrite";
-import { useRouter } from "expo-router";
-import { useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { useFocusEffect, useRouter } from "expo-router";
+import { useCallback, useState } from "react";
+import { Keyboard, KeyboardAvoidingView, Platform, StyleSheet, View } from "react-native";
 import { ID } from "react-native-appwrite";
 import { Button, SegmentedButtons, Text, TextInput, useTheme } from "react-native-paper";
 import type { ThemeProp } from "react-native-paper/lib/typescript/types";
@@ -23,6 +23,16 @@ export default function AddHabitScreen(){
     const {user} = useAuth();
     const router = useRouter();
 
+
+    //Puts the keyboard down when the title state changes, could be title, description or frequency, doesnt matter
+    useFocusEffect(
+        useCallback(() => {
+            console.log("INSIDE USE FOCUS EFFECT, KEYBOARD");
+            return () => {
+                Keyboard.dismiss();
+            }
+        }, [title])
+    );
 
     const handleTitle = (text:string) => {
         console.log(text);
@@ -72,6 +82,12 @@ export default function AddHabitScreen(){
         setError("There was an error creating the habit");
        }
 
+
+        //Clear the screen
+        setTitle("");
+        setDescription("");
+        setFrequency("daily");
+
         //Now that a new habit was created, we also want to see it
         router.back()
     }
@@ -103,38 +119,45 @@ export default function AddHabitScreen(){
 });
 
     return (<>
-        <View style={styles.container}>
-            <TextInput label="Title" mode="outlined"
-                style={styles.input}
-                theme={{ colors: { outline: "#000000" } }}
-                onChangeText={handleTitle}
-                textColor="black"></TextInput>
+ 
+        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"}
+            style={styles.container}>
+            <View>
+                <TextInput label="Title" mode="outlined"
+                    style={styles.input}
+                    theme={{ colors: { outline: "#000000" } }}
+                    onChangeText={handleTitle}
+                    textColor="black"
+                    value={title}></TextInput>
 
-            <TextInput label="Description" mode="outlined"
-                style={styles.input}
-                theme={{ colors: { outline: "#000000" } }}
-                onChangeText={handleDescription}
-                textColor="black"></TextInput>
+                <TextInput label="Description (Optional)" mode="outlined"
+                    style={styles.input}
+                    theme={{ colors: { outline: "#000000" } }}
+                    onChangeText={handleDescription}
+                    textColor="black"
+                    value={description}></TextInput>
 
-            <View style={styles.frequencyContainer}>
-                <SegmentedButtons
-                    theme={themes.segmentedButtons}
-                    value={frequency}
-                    onValueChange={handleFrequency}
-                    style={styles.segmentedButtons}
-                    buttons={FREQUENCIES.map((freq) => ({
-                        value: freq, label: freq.charAt(0).toUpperCase() + freq.slice(1),
-                        checkedColor: '#000000', uncheckedColor: '#000000'}))}/>
+                <View style={styles.frequencyContainer}>
+                    <SegmentedButtons
+                        theme={themes.segmentedButtons}
+                        value={frequency}
+                        onValueChange={handleFrequency}
+                        style={styles.segmentedButtons}
+                        buttons={FREQUENCIES.map((freq) => ({
+                            value: freq, label: freq.charAt(0).toUpperCase() + freq.slice(1),
+                            checkedColor: '#000000', uncheckedColor: '#000000'
+                        }))} />
+                </View>
+                <Button mode="contained"
+                    onPress={handleSubmit}
+                    style={styles.button}
+                    disabled={!title}
+                    buttonColor="#7256a3"
+                    textColor="white"
+                    theme={themes.button as ThemeProp}> Add Habit</Button>
+                {error && <Text style={{ color: theme.colors.error }}>{error}</Text>}
             </View>
-        <Button mode="contained" 
-            onPress={handleSubmit} 
-            style={styles.button} 
-            disabled={!title || !description} 
-            buttonColor="#7256a3" 
-            textColor="white" 
-            theme={themes.button as ThemeProp}> Add Habit</Button>
-        {error && <Text style={{color:theme.colors.error }}>{error}</Text>}
-    </View>
+        </KeyboardAvoidingView>
     </>)
 }
 

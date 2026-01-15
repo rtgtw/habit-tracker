@@ -41,6 +41,8 @@ function RouteGuard({children}: {children: React.ReactNode}){
     const inAuthGroup:boolean = segments[0] === "auth";
    console.log(`InAuthGroup: ${inAuthGroup}`);
 
+   console.log(user ? console.log(`User Session Active?: True`) : console.log("User Session Active?: False"));
+   console.log(isLoadingUser? console.log('Is Loading? True') : console.log('Is Loading? False'));
 
     //If the user is not authenticated, and not inside the auth screen, redirect to auth
     //We also have to account if the user is done loading, thats the only time when
@@ -51,7 +53,7 @@ function RouteGuard({children}: {children: React.ReactNode}){
 
       //If the user exists but not in the auth group then get them out of the auth page and send them home
     }else if(user && inAuthGroup && !isLoadingUser){
-      console.log("User, inAuthGroup, !isLoaadding. Entered");
+      console.log("User, inAuthGroup, !isLoading. Entered");
       router.replace("/");
     }
   },[user,segments]);

@@ -1,17 +1,18 @@
-import { account, client, DATABASE_ID, databases, HABITS_TABLE_ID, RealTimeResponse } from "@/lib/appwrite";
+import { account, client, DATABASE_ID, databases, HABITS_COMPLETION_ID, HABITS_TABLE_ID, RealTimeResponse } from "@/lib/appwrite";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useEffect, useRef, useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
-import { Query } from "react-native-appwrite";
+import { ID, Query } from "react-native-appwrite";
 import { Swipeable } from "react-native-gesture-handler";
 import { Button, Surface, Text } from "react-native-paper";
 import { useAuth } from "../../lib/auth-context";
-import { Habit } from "../types/database.type";
-
+import { Habit, HabitCompletion } from "../types/database.type";
+ 
 export default function Index() {
 
   const {user, signOut} = useAuth();
   const [habits, setHabits] = useState<Habit[]>();
+  const [completedHabits, setCompletedHabits] = useState<string[]>();
 
   const swipableRef = useRef<{[key:string]: Swipeable | null}>({});
 
@@ -35,14 +36,62 @@ export default function Index() {
     }
   }
 
-  const renderRightActions = () => {
+  //id is the id of the ROW (document ID)
+  //We want to insert the completion into the list of completed habits
+  //We are creating a new ROW entry inside of habit_completion so we create a NEW id
+  const handleCompleteHabit = async (id:string) => {
+
+    //Make sure that the user exists
+    if(!user || completedHabits?.includes(id)) return;
+
+    try {
+
+      const completed_at = new Date().toISOString()
+
+      await databases.createDocument(DATABASE_ID,HABITS_COMPLETION_ID,ID.unique(), 
+      {
+        habit_id:id,
+        user_id: user?.$id,
+        completed_at
+
+      });
+
+
+      //Find method returns back the specific habit inside of this array
+      const habit = habits?.find((habit) => habit?.$id === id);
+
+      //If we dont find anything then just return
+      if(!habit) return;
+
+      await databases.updateDocument(DATABASE_ID, HABITS_TABLE_ID, id, {
+        streak_count: ++habit.streak_count,
+        last_completed: completed_at
+      });
+
+      console.log("COMPLETED HABIT, UPDATED DB");
+
+
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  //Boolean that just returns if the habit has been completed by checking the completedHabits array
+  //with the habit ID
+  //CompletedHabits is an array of IDs
+  const isHabitComplete = (habitId:string) => {console.log(completedHabits); return completedHabits?.includes(habitId);}
+
+  const renderRightActions = (habitId:string) => {
+
+    console.log(`Inside renderRightActions: isHabitComplete: ${isHabitComplete(habitId)}`);
 
     return (
       <View style={styles.swipeActionRight}>
-        <MaterialCommunityIcons name="check-circle-outline" size={32} color={"#fff"} />
+
+        {isHabitComplete(habitId) ? (<Text style={{color:"#fff"}}>Completed!</Text>) : (<MaterialCommunityIcons name="check-circle-outline" size={32} color={"#fff"}/>)}
+        
       </View>)
   };
-
 
   //Run fetchHabits everytime the user come back(re-renders) index.ts
   //Pass in user because if this changes then we should re-render
@@ -52,11 +101,12 @@ export default function Index() {
   
     if(user){
       
-      const channel = `databases.${DATABASE_ID}.collections.${HABITS_TABLE_ID}.documents`;
+    const habitsChannel = `databases.${DATABASE_ID}.collections.${HABITS_TABLE_ID}.documents`;
+
     //Now we have to listen for real time updates/changes in the DB so we have to use
     //Appwrite's subscribe function, it subscribes to events that happen within the DB table
     //This triggers the listening, running habitSubscription(); stops the event listner
-    const habitSubscription = client.subscribe(channel,
+    const habitSubscription = client.subscribe(habitsChannel,
       (response:RealTimeResponse ) => {
         
         console.log("INSIDE HABIT SUBSCRIPTION");
@@ -80,8 +130,35 @@ export default function Index() {
       }); 
 
 
+      //Completions Channel
+      const habitsCompletionChannel = `databases.${DATABASE_ID}.collections.${HABITS_COMPLETION_ID}.documents`;
+
+    //Now we have to listen for real time updates/changes in the DB so we have to use
+    //Appwrite's subscribe function, it subscribes to events that happen within the DB table
+    //This triggers the listening, running habitSubscription(); stops the event listner
+    const habitCompletionSubscription = client.subscribe(habitsCompletionChannel,
+      (response:RealTimeResponse ) => {
+        
+        console.log("INSIDE HABIT SUBSCRIPTION");
+        //We are listening to real time events on this Table, the response.event is an object which tells what type of operations
+        //Account for them
+        //Create operation
+        console.log(`Response Events:`);
+        console.log(response.events);
+        if(response.events.includes("databases.*.collections.*.documents.*.create")){
+          console.log("Entered CREATE");
+          fetchTodayCompletitons();
+        }
+
+        console.log("Exiting Subscribe!");
+      }); 
+      //End Completions Channel
+
+
 
        fetchHabits();
+       fetchTodayCompletitons();
+
        console.log("Leaving useEffect")
 
        //Clean up use effects to avoid memoy leaks
@@ -89,6 +166,7 @@ export default function Index() {
 
         console.log("Inside CLEANUP");
         habitSubscription();
+        habitCompletionSubscription();
        };  
     }
 
@@ -130,6 +208,34 @@ export default function Index() {
     }
   }
 
+  const fetchTodayCompletitons = async () => {
+
+    const today = new Date();
+    today.setHours(0,0,0,0);
+
+     try {
+      const sessions = account.listSessions();
+
+      const response = await databases.listDocuments(
+        DATABASE_ID, 
+        HABITS_COMPLETION_ID,
+        //?. == return unddefined if its not there
+        //?? if a isnt there, return b
+        [Query.equal("user_id", user?.$id ?? ""), Query.greaterThanEqual("completed_at", today.toISOString())]
+        //  [Query.equal("user_id", "6965a1ae001aa9cbcfbd")]
+       );
+
+
+       //Transformed this into an arry of just IDs
+       const completions = response.documents as unknown as HabitCompletion[]
+       setCompletedHabits(completions.map((completion) => completion.habit_id));
+
+    } catch (error ) {
+      console.log("entered error");
+      console.error(error);
+    }
+  }
+
 
   return (
     <View style={styles.container}>
@@ -154,19 +260,20 @@ export default function Index() {
             overshootLeft={false}
             overshootRight={false}
             renderLeftActions={renderLeftActions}
-            renderRightActions={renderRightActions}
+            renderRightActions={() => renderRightActions(habit?.$id)}
             onSwipeableOpen={ (direction) => {
               if(direction === "left"){
                 handleDeleteHabit(habit?.$id);
-              }else{
-                // handleComplete()
+              }else if (direction === "right"){
+                handleCompleteHabit(habit?.$id);
+                //We have to keep track of all the habits that are completed
               }
 
               swipableRef.current[habit.$id]?.close();
             }}>
 
-
-              <Surface style={styles.card} elevation={0}  >
+              {/* This is how you conditionally add style, you create an array, when its true, the style on the right is the new one */}
+              <Surface style={[styles.card, isHabitComplete(habit?.$id) && styles.cardCompleted]} elevation={0}  >
                 <View style={styles.cardContent}>
                   <Text style={styles.cardTitle}>{habit.title}</Text>
                   <Text style={styles.cardDescription}>{habit.description}</Text>
@@ -225,6 +332,10 @@ const styles = StyleSheet.create({
     shadowOpacity: .18,
     shadowRadius: 1,
     elevation: 4
+  },
+
+  cardCompleted:{
+    opacity:.6
   },
 
   cardContent:{
