@@ -79,11 +79,11 @@ export default function Index() {
   //Boolean that just returns if the habit has been completed by checking the completedHabits array
   //with the habit ID
   //CompletedHabits is an array of IDs
-  const isHabitComplete = (habitId:string) => {console.log(completedHabits); return completedHabits?.includes(habitId);}
+  const isHabitComplete = (habitId:string) => {return completedHabits?.includes(habitId);}
 
   const renderRightActions = (habitId:string) => {
 
-    console.log(`Inside renderRightActions: isHabitComplete: ${isHabitComplete(habitId)}`);
+    // console.log(`Inside renderRightActions: isHabitComplete: ${isHabitComplete(habitId)}`);
 
     return (
       <View style={styles.swipeActionRight}>
@@ -113,8 +113,8 @@ export default function Index() {
         //We are listening to real time events on this Table, the response.event is an object which tells what type of operations
         //Account for them
         //Create operation
-        console.log(`Response Events:`);
-        console.log(response.events);
+        // console.log(`Response Events:`);
+        // console.log(response.events);
         if(response.events.includes("databases.*.collections.*.documents.*.create")){
           console.log("Entered CREATE");
           fetchHabits();
@@ -143,8 +143,8 @@ export default function Index() {
         //We are listening to real time events on this Table, the response.event is an object which tells what type of operations
         //Account for them
         //Create operation
-        console.log(`Response Events:`);
-        console.log(response.events);
+        // console.log(`Response Events:`);
+        // console.log(response.events);
         if(response.events.includes("databases.*.collections.*.documents.*.create")){
           console.log("Entered CREATE");
           fetchTodayCompletitons();
@@ -169,9 +169,6 @@ export default function Index() {
         habitCompletionSubscription();
        };  
     }
-
-    
-
   },[user]);
 
 
